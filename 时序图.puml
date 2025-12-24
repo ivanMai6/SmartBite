@@ -1,0 +1,49 @@
+@startuml
+autonumber
+
+actor "User" as user
+participant "API Gateway" as gateway
+box "Backend" #lightblue
+participant "Chat Controller" as controller
+participant "Chat Service" as service
+end box
+box "Infrastructure" #lightyellow
+participant "Redis (Memory)" as redis
+participant "LLM (AI)" as llm
+participant "Elasticsearch" as es
+end box
+
+group "Round 1: Search Interaction"
+    user -> gateway: POST /chat/completions (session_id, msg="西餐...")
+    gateway -> controller: 转发请求
+    controller -> service: process(msg, history)
+
+    note right of service: 1. 加载历史上下文
+    service -> redis: getHistory(sessionId)
+    redis --> service: List<ChatMessage>
+
+    note right of service: 2. 意图识别 & 检索增强
+    service -> llm: 判断意图 & 重写查询 (Query Transformation)
+    llm --> service: 意图:SEARCH, 关键词:"北京 适合约会 西餐"
+
+    service -> es: 混合检索 (Vector + Filter + Keyword)
+    es --> service: Top 5 Merchants (JSON)
+
+    note right of service: 3. 生成回答
+    service -> llm: Prompt: System + History + SearchResults + UserMsg
+    activate llm
+    llm --> service: Stream Response (流式返回)
+    service --> controller: Stream Response
+    controller --> gateway: Stream Response
+    gateway --> user: Stream Response (逐字显示)
+    deactivate llm
+
+    note right of service: 4. 异步保存历史 (关键!)
+    service -[#0000FF]> redis: appendHistory(sessionId, UserMsg + AiResponse)
+end group
+
+group "Round 2: Follow-up"
+    user -> gateway: POST /chat/completions (session_id, msg="便宜点的")
+    note right of service: 此时 Redis 已包含 Round 1 的内容，\nLLM 重写后会变成 "北京 适合约会 便宜 西餐"
+end group
+@enduml

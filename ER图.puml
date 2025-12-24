@@ -1,0 +1,48 @@
+@startuml ER_Diagram
+hide circle
+skinparam linetype ortho
+
+entity "merchants (商户表)" as merchants {
+  *id : BIGINT <<PK>>
+  --
+  name : VARCHAR
+  category : VARCHAR -- "火锅", "西餐"
+  *avg_price : INTEGER -- 核心筛选字段：人均价格
+  rating : DECIMAL(2,1)
+  *location : GEOGRAPHY(POINT, 4326)
+  address : VARCHAR
+  tags : TEXT[] -- ["停车方便", "包间"] (建议用数组而非JSONB，方便PG索引)
+  description : TEXT -- "用于生成向量的富文本描述"
+  open_time : VARCHAR
+  created_at : TIMESTAMP
+  updated_at : TIMESTAMP -- 用于增量同步数据到 ES
+}
+
+entity "reviews (评论表)" as reviews{
+    *id : BIGINT <<PK>>
+    --
+    *merchant_id : BIGINT <<FK>>
+    user_id : BIGINT
+    content : TEXT -- 用于挖掘商户特色
+    rating : DECIMAL
+}
+
+entity "products (推荐菜)" as products {
+  *id : BIGINT <<PK>>
+  --
+  *merchant_id : BIGINT <<FK>>
+  name : VARCHAR
+  price : DECIMAL
+  is_recommend : BOOLEAN -- 是否招牌菜
+}
+
+entity "users" {
+  *id : BIGINT <<PK>>
+  --
+  username : VARCHAR
+  preferences : JSONB -- {"fav_category": "spicy"}
+}
+
+merchants ||..|{ products : has
+merchants ||..|{ reviews : has
+@enduml
