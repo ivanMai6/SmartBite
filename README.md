@@ -4,11 +4,11 @@ SmartBite 旨在打造一个基于“地理位置 + 语义理解”的下一代�
 
 ### 1.时序图
 
-![](D:\javaWorkSpace\SmartBite\Seq_Diagram.png)
+![](.\Seq_Diagram.png)
 
 ### 2.ER图
 
-![](D:\javaWorkSpace\SmartBite\ER_Diagram.png)
+![](.\ER_Diagram.png)
 
 ### 3.api接口
 
