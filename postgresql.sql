@@ -84,6 +84,26 @@ CREATE TRIGGER update_merchants_modtime
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
+-- 1. 创建同步函数
+CREATE OR REPLACE FUNCTION sync_location_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- 只有当经纬度都不为空时，才更新 location 字段
+    -- 注意 PostGIS 顺序是 (经度 Longitude, 纬度 Latitude)
+    IF NEW.longitude IS NOT NULL AND NEW.latitude IS NOT NULL THEN
+        NEW.location = ST_SetSRID(ST_MakePoint(NEW.longitude, NEW.latitude), 4326);
+END IF;
+RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- 2. 绑定触发器到 merchants 表
+-- (如果之前有其他的触发器，这里不会冲突)
+CREATE TRIGGER trigger_sync_location
+    BEFORE INSERT OR UPDATE ON merchants
+                         FOR EACH ROW
+                         EXECUTE FUNCTION sync_location_column();
+
 -- 插入一条北京三里屯的数据
 INSERT INTO merchants (name, category, avg_price, rating, location, address, tags, description)
 VALUES (
