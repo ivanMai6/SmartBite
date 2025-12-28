@@ -87,3 +87,29 @@ SmartBite 旨在打造一个基于“地理位置 + 语义理解”的下一代�
 }
 
 ```
+
+es索引的创建语句：
+```
+PUT /merchants
+{
+  "mappings": {
+    "properties": {
+      "id": { "type": "long" },
+      "name": { "type": "text", "analyzer": "ik_max_word" }, 
+      "category": { "type": "keyword" }, 
+      "avg_price": { "type": "integer" },
+      "rating": { "type": "float" },
+      "tags": { "type": "keyword" },
+      "location": { "type": "geo_point" },  
+      "address": { "type": "text", "analyzer": "ik_max_word" },
+      "description": { "type": "text", "analyzer": "ik_max_word" },
+      "description_vector": { 
+        "type": "dense_vector", 
+        "dims": 1536, 
+        "index": true,
+        "similarity": "cosine"
+      }
+    }
+  }
+}
+```
