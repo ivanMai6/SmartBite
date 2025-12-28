@@ -1,0 +1,47 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: ai-search-assistant
+
+  # 1. 数据库配置
+  datasource:
+    url: jdbc:postgresql://192.168.200.130:5432/local_life
+    username: myuser       # 对应 docker-compose 里的配置
+    password: mypassword
+    driver-class-name: org.postgresql.Driver
+
+  # 2. JPA 配置
+  jpa:
+    hibernate:
+      ddl-auto: update     # 自动更新表结构 (开发阶段很好用)
+    show-sql: true         # 控制台打印 SQL，方便调试
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+
+  # 3. Elasticsearch 配置
+  elasticsearch:
+    uris: http://192.168.200.130:9200
+    socket-timeout: 10s
+    connection-timeout: 5s
+
+# 4. LangChain4j 配置 (AI) - 使用通义千问
+langchain4j:
+  dashscope:
+    # --- 对话模型配置 ---
+    chat-model:
+      # 你的阿里云 API Key (从 RAM 访问控制获取)
+      api-key: ${DASHSCOPE_API_KEY}
+      # 模型名称 (推荐 qwen-turbo 或 qwen-plus)
+      model-name: qwen-turbo
+      # 其他可选参数 (温度、TopP 等)
+      temperature: 0.7
+
+    # --- 向量模型配置 ---
+    embedding-model:
+      api-key: ${DASHSCOPE_API_KEY}
+      # 模型名称 (推荐 text-embedding-v2)
+      model-name: text-embedding-v2
